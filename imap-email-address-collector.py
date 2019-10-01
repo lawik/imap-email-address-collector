@@ -20,6 +20,8 @@ NOSSL_PROMT = 'LETTHEWOLDREADALLMESSAGES'
 results = {}
 unmatched = set()
 
+skip_boxes = []
+
 
 def matchAndAdd(email, name=''):
 	email = email.lower()
@@ -34,6 +36,9 @@ def grabAddress(address):
 	address = str(address).strip()
 	address = RE_QUOTES.sub('', address)
 	address = RE_SPACES.sub(' ', address)
+
+	# TODO: Fix the issue where a bunch of iso encoding information ends up in the name
+	#       for non-english characters.
 
 	if address.startswith('<'): # No name, just an email address
 		address = address[1:]
@@ -90,16 +95,25 @@ def main(args):
 
 		print 'Logged in as %s' % args.user
 
+	if args.skip:
+		for box in args.skip.split(','):
+			skip_boxes.append('"%s"' % box.strip())
+
 	print 'Collecting email addresses from all messages...'
 
 	for box in listBoxes(imap):
-		print 'Scanning %s' % box
+		if box not in skip_boxes:
+			print 'Scanning %s' % box
+		else:
+			print 'Skipping %s' % box
+			continue
 
 		imap.select(box, readonly=True)
 		typ, data = imap.search(None, 'ALL')
 		count = 0
 
 		for num in data[0].split():
+			# TODO: Filter out mail older than args.fromdate
 			typ, data = imap.fetch(num, '(BODY[HEADER.FIELDS (TO FROM)])')
 			headers = headerParser.parsestr(data[0][1])
 
@@ -165,5 +179,6 @@ if __name__ == '__main__':
 	argParser.add_argument('--donotannoyme', help='(optional) do not complain about non-ssl connections', action='store_true')
 	argParser.add_argument('--password', help='(optional) login password (will be prompted otherwise)')
 	argParser.add_argument('--port', help='(optional) imap host port, defaults to 993', type=int, default=993)
+	argParser.add_argument('--skip', help='(optional) imap boxes to skip')
 
 	main(argParser.parse_args())
