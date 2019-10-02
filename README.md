@@ -23,7 +23,7 @@ Outputs the found names and addresses to the terminal or a CSV file.
 	  --nossl              		(optional) do not use ssl
 	  --donotannoyme       		(optional) do not complain about non-ssl connections
 	  --password PASSWORD  		(optional) login password (will be prompted otherwise)
-	  --port PORT				(optional) imap host port, defaults to 993
+	  --port PORT			(optional) imap host port, defaults to 993
 	  --fromdate DD-MM-YYYY 	(optional) filter out older than date
 
 
