@@ -25,19 +25,27 @@ skip_boxes = []
 
 
 def matchAndAdd(email, name=''):
-	if name.startswith('=?', 0):
-		name, encoding = decode_header(name)[0]
+	
+	name, encoding = decode_header(name)[0]
+	try:
+		if encoding:
+			name = name.decode(encoding).encode('utf-8')
+		else:
+			name = name.encode('utf-8')
+	except UnicodeDecodeError:
+		name = name
+
 	
 	email = email.lower()
 	if RE_EMAIL.match(email):
 		if email not in results or len(name) > len(results[email]): # only overwrite with longer name
-			results[email] = name.strip()
+			results[email] = name
 	else:
 		unmatched.add(email)
 
 
 def grabAddress(address):
-	address = str(address).strip()
+	address = address.strip()
 	address = RE_QUOTES.sub('', address)
 	address = RE_SPACES.sub(' ', address)
 
@@ -186,6 +194,6 @@ if __name__ == '__main__':
 	argParser.add_argument('--password', help='(optional) login password (will be prompted otherwise)')
 	argParser.add_argument('--port', help='(optional) imap host port, defaults to 993', type=int, default=993)
 	argParser.add_argument('--skip', help='(optional) imap boxes to skip')
-	argParser.add_argument('--fromdate', help='(optional) [DD-MM-YYYY] filter out older than date')
+	argParser.add_argument('--fromdate', help='(optional) [DD-Mon-YYYY] filter out older than date')
 
 	main(argParser.parse_args())

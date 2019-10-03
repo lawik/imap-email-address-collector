@@ -16,15 +16,16 @@ Outputs the found names and addresses to the terminal or a CSV file.
 	                                       [--password PASSWORD] [--port PORT]
 
 	optional arguments:
-	  -h, --help           		show this help message and exit
-	  --host HOST          		imap host address
-	  --user USER          		login username
-	  --csv CSV            		(optional) output csv filepath
-	  --nossl              		(optional) do not use ssl
-	  --donotannoyme       		(optional) do not complain about non-ssl connections
-	  --password PASSWORD  		(optional) login password (will be prompted otherwise)
-	  --port PORT			(optional) imap host port, defaults to 993
-	  --fromdate DD-MM-YYYY 	(optional) filter out older than date
+	  -h, --help              show this help message and exit
+	  --host HOST             imap host address
+	  --user USER             login username
+	  --csv CSV               (optional) output csv filepath
+	  --nossl                 (optional) do not use ssl
+	  --donotannoyme          (optional) do not complain about non-ssl connections
+	  --password PASSWORD     (optional) login password (will be prompted otherwise)
+	  --port PORT             (optional) imap host port, defaults to 993
+	  --skip                  (optional) imap boxes to skip
+	  --fromdate DD-Mon-YYYY  (optional) filter out older than date
 
 
 ## License
