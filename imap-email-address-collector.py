@@ -10,6 +10,7 @@ import getpass
 import imaplib
 import argparse
 from email.parser import HeaderParser
+from email.header import decode_header
 
 RE_EMAIL = re.compile(r'^[a-z0-9._%+-]+\@[a-z0-9.-]+\.[a-z]{2,}$')
 RE_QUOTES = re.compile(r'[\'\"]')
@@ -24,21 +25,29 @@ skip_boxes = []
 
 
 def matchAndAdd(email, name=''):
+	
+	name, encoding = decode_header(name)[0]
+	try:
+		if encoding:
+			name = name.decode(encoding).encode('utf-8')
+		else:
+			name = name.encode('utf-8')
+	except UnicodeDecodeError:
+		name = name
+
+	
 	email = email.lower()
 	if RE_EMAIL.match(email):
 		if email not in results or len(name) > len(results[email]): # only overwrite with longer name
-			results[email] = name.strip()
+			results[email] = name
 	else:
 		unmatched.add(email)
 
 
 def grabAddress(address):
-	address = str(address).strip()
+	address = address.strip()
 	address = RE_QUOTES.sub('', address)
 	address = RE_SPACES.sub(' ', address)
-
-	# TODO: Fix the issue where a bunch of iso encoding information ends up in the name
-	#       for non-english characters.
 
 	if address.startswith('<'): # No name, just an email address
 		address = address[1:]
@@ -100,7 +109,6 @@ def main(args):
 			skip_boxes.append('"%s"' % box.strip())
 
 	print 'Collecting email addresses from all messages...'
-
 	for box in listBoxes(imap):
 		if box not in skip_boxes:
 			print 'Scanning %s' % box
@@ -109,11 +117,17 @@ def main(args):
 			continue
 
 		imap.select(box, readonly=True)
-		typ, data = imap.search(None, 'ALL')
+
+		if args.fromdate:
+			print 'From-date: %s' % args.fromdate
+			search_string = '(SINCE "%s")' % args.fromdate
+			typ, data = imap.search(None, search_string)
+		else:
+			typ, data = imap.search(None, 'ALL')
+
 		count = 0
 
 		for num in data[0].split():
-			# TODO: Filter out mail older than args.fromdate
 			typ, data = imap.fetch(num, '(BODY[HEADER.FIELDS (TO FROM)])')
 			headers = headerParser.parsestr(data[0][1])
 
@@ -180,5 +194,6 @@ if __name__ == '__main__':
 	argParser.add_argument('--password', help='(optional) login password (will be prompted otherwise)')
 	argParser.add_argument('--port', help='(optional) imap host port, defaults to 993', type=int, default=993)
 	argParser.add_argument('--skip', help='(optional) imap boxes to skip')
+	argParser.add_argument('--fromdate', help='(optional) [DD-Mon-YYYY] filter out older than date')
 
 	main(argParser.parse_args())
